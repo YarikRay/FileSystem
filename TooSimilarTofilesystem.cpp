@@ -73,13 +73,16 @@ public:
             wstring search_path = current_path + L"\\*";
             HANDLE hFind = FindFirstFileW(search_path.c_str(), &ffd);
 
-            if (hFind == INVALID_HANDLE_VALUE) {
-                DWORD err = GetLastError();
-                if (err != ERROR_FILE_NOT_FOUND && err != ERROR_NO_MORE_FILES) {
-                    wcerr << L"Ошибка доступа: " << search_path << endl;
-                }
-                continue;
-            }
+             if (hFind == INVALID_HANDLE_VALUE) {
+                 DWORD err = GetLastError();
+                 if (err != ERROR_FILE_NOT_FOUND && err != ERROR_NO_MORE_FILES) {
+                     wcerr << L"Ошибка доступа: " << search_path << endl;
+                 }
+                 continue;
+             }
+            //if (ffd.dwFileAttributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN)) {
+             //   continue;
+            //}
 
             do {
                 if (wcscmp(ffd.cFileName, L".") == 0 || wcscmp(ffd.cFileName, L"..") == 0) {
@@ -92,23 +95,18 @@ public:
                     dirs_to_process.push_back(full_path);
                 }
                 else {
-                    HANDLE hFile = CreateFileW(
-                        full_path.c_str(),
-                        GENERIC_READ,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    NULL,
-                    OPEN_EXISTING,
-                    FILE_ATTRIBUTE_NORMAL,
-                    NULL);
-                    if (hFile != INVALID_HANDLE_VALUE) {
-                        DWORD filesize = GetFileSize(hFile, NULL);
-                        size += filesize;
-                    }
-
-                    // ifstream in(full_path, ios::binary | ios::ate);
-                    // if (in.is_open()) {
-                    //     size += in.tellg();
-                    //     in.close();
+                    size += (static_cast<ULONGLONG>(ffd.nFileSizeHigh) << 32) | ffd.nFileSizeLow;
+                    // HANDLE hFile = CreateFileW(
+                    //     full_path.c_str(),
+                    //     GENERIC_READ,
+                    // FILE_SHARE_READ | FILE_SHARE_WRITE,
+                    // NULL,
+                    // OPEN_EXISTING,
+                    // FILE_ATTRIBUTE_NORMAL,
+                    // NULL);
+                    // if (hFile != INVALID_HANDLE_VALUE) {
+                    //     DWORD filesize = GetFileSize(hFile, NULL);
+                    //     size += filesize;
                     // }
                 }
             } while (FindNextFileW(hFind, &ffd));
@@ -128,13 +126,16 @@ public:
             wstring search_path = current_path + L"\\*";
             HANDLE hFind = FindFirstFileW(search_path.c_str(), &ffd);
 
-            if (hFind == INVALID_HANDLE_VALUE) {
-                DWORD err = GetLastError();
-                if (err != ERROR_FILE_NOT_FOUND && err != ERROR_NO_MORE_FILES) {
-                    wcerr << L"Ошибка доступа: " << search_path << endl;
-                }
-                continue;
-            }
+             if (hFind == INVALID_HANDLE_VALUE) {
+                 DWORD err = GetLastError();
+                 if (err != ERROR_FILE_NOT_FOUND && err != ERROR_NO_MORE_FILES) {
+                     wcerr << L"Ошибка доступа: " << search_path << endl;
+                 }
+                 continue;
+             }
+            //if (ffd.dwFileAttributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN)) {
+            //    continue;
+            //}
 
             do {
                 if (wcscmp(ffd.cFileName, L".") == 0 || wcscmp(ffd.cFileName, L"..") == 0) {
@@ -157,19 +158,7 @@ public:
                     file.name = ffd.cFileName;
                     file.full_path = full_path;
                     file.directory = false;
-
-                    HANDLE hFile = CreateFileW(
-                        full_path.c_str(),
-                        GENERIC_READ,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    NULL,
-                    OPEN_EXISTING,
-                    FILE_ATTRIBUTE_NORMAL,
-                    NULL);
-                    if (hFile != INVALID_HANDLE_VALUE) {
-                        DWORD filesize = GetFileSize(hFile, NULL);
-                        file.size = filesize;
-                    }
+                    file.size = (static_cast<ULONGLONG>(ffd.nFileSizeHigh) << 32) | ffd.nFileSizeLow;
                     size_t pos = file.name.find_last_of('.'); // ищем индекс точки
                     if (pos != string::npos) // проверям, найдена ли точка. Если точка найдена, то делается срез символов после точки - расширение
                         // Если не найдена, то инструкция npos запишет в pos максимальный размер числа, которй может принять size_t и запишет в file.extension None
@@ -199,19 +188,20 @@ int main() {
     // Настройка консоли для вывода Unicode
     setlocale(LC_ALL, "RUSSIAN");
 
-    Directory_It<file_info> it(L"C:\\Users\\yaros\\Desktop\\-FileSystem\\TestDirectory");
+    Directory_It<file_info> it(L"D:\\");
 
     HWND consoleWindow = GetConsoleWindow();
     ShowWindow(consoleWindow, SW_MAXIMIZE);
 
     wcout << left << setw(24) << L"File Name" << L"Size" << L"     " << L"Extension" << L"         "
           << L"Directory?" << L"                                                      " << L"Full Path" << endl;
-
+    int count = 0;
     for (auto i = it.begin(); i != it.end(); ++i) {
         file_info& item = *i;
+        count += 1;
         wcout << left << setw(25) << item.name << left << item.size << left << " " << setw(10) << left << setw(20) << item.extension << left << setw(15) << item.directory
               << L" " << item.full_path << endl;
     }
-
+    cout << count << endl;
     return 0;
 }
