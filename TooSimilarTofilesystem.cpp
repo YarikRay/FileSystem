@@ -71,7 +71,20 @@ public:
             dirs_to_process.pop_front();
 
             wstring search_path = current_path + L"\\*";
-            HANDLE hFind = FindFirstFileW(search_path.c_str(), &ffd);
+            HANDLE hFind = FindFirstFileW(search_path.c_str(), &ffd); // поиск первого файла
+
+            // Проверка является ли файл символьной ссылкой
+            // if (ffd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+            //     if (ffd.dwReserved0 == IO_REPARSE_TAG_SYMLINK){
+            //         wcout << L"Symlink was founded. Skip it!" << ffd.cFileName << endl;
+            //         continue;
+            //     }
+            // }
+            if (ffd.dwReserved0 == IO_REPARSE_TAG_SYMLINK){ // флаг IO_REPARSE_TAG_SYMLINK позволяет отлавливать
+                // символьные ссылки. Если символьная ссылка найдена, просто продолжаем поиск
+                wcout << L"Symlink was founded. Skip it!" << ffd.cFileName << endl;
+                continue;
+            }
 
              if (hFind == INVALID_HANDLE_VALUE) {
                  DWORD err = GetLastError();
@@ -80,9 +93,6 @@ public:
                  }
                  continue;
              }
-            //if (ffd.dwFileAttributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN)) {
-             //   continue;
-            //}
 
             do {
                 if (wcscmp(ffd.cFileName, L".") == 0 || wcscmp(ffd.cFileName, L"..") == 0) {
@@ -95,19 +105,11 @@ public:
                     dirs_to_process.push_back(full_path);
                 }
                 else {
-                    size += (static_cast<ULONGLONG>(ffd.nFileSizeHigh) << 32) | ffd.nFileSizeLow;
-                    // HANDLE hFile = CreateFileW(
-                    //     full_path.c_str(),
-                    //     GENERIC_READ,
-                    // FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    // NULL,
-                    // OPEN_EXISTING,
-                    // FILE_ATTRIBUTE_NORMAL,
-                    // NULL);
-                    // if (hFile != INVALID_HANDLE_VALUE) {
-                    //     DWORD filesize = GetFileSize(hFile, NULL);
-                    //     size += filesize;
-                    // }
+                    size += (static_cast<ULONGLONG>(ffd.nFileSizeHigh) << 32) | ffd.nFileSizeLow; // эта строка
+                    // вычисляет полный размер файла в байтах, используя два поля из структуры WIN32_FIND_DATA.
+                    // В WinApi размер файла хранится в двух 32-битных частях nFileSizeHigh и nFileSizeLow. С помощью
+                    // static_cast приводим nFileSizeHigh к 64-битному виду, чтобы при сдвиге не потерять данные, и сдвигаем ее на 32 бита влево.
+                    // Далее с помощью "|" объединяем старшую и младшую части. Таким образом, получаем размер.
                 }
             } while (FindNextFileW(hFind, &ffd));
 
@@ -125,6 +127,18 @@ public:
 
             wstring search_path = current_path + L"\\*";
             HANDLE hFind = FindFirstFileW(search_path.c_str(), &ffd);
+            // Проверка является ли файл символьной ссылкой
+            // if (ffd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+            //     if (ffd.dwReserved0 == IO_REPARSE_TAG_SYMLINK){ //
+            //         wcout << L"Symlink was founded. Skip it!" << ffd.cFileName << endl;
+            //         continue;
+            //     }
+            // }
+            if (ffd.dwReserved0 == IO_REPARSE_TAG_SYMLINK){ // флаг IO_REPARSE_TAG_SYMLINK позволяет отлавливать
+                // символьные ссылки. Если символьная ссылка найдена, просто продолжаем поиск
+                wcout << L"Symlink was founded. Skip it!" << ffd.cFileName << endl;
+                continue;
+            }
 
              if (hFind == INVALID_HANDLE_VALUE) {
                  DWORD err = GetLastError();
@@ -133,10 +147,6 @@ public:
                  }
                  continue;
              }
-            //if (ffd.dwFileAttributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN)) {
-            //    continue;
-            //}
-
             do {
                 if (wcscmp(ffd.cFileName, L".") == 0 || wcscmp(ffd.cFileName, L"..") == 0) {
                     continue;
@@ -158,7 +168,11 @@ public:
                     file.name = ffd.cFileName;
                     file.full_path = full_path;
                     file.directory = false;
-                    file.size = (static_cast<ULONGLONG>(ffd.nFileSizeHigh) << 32) | ffd.nFileSizeLow;
+                    file.size = (static_cast<ULONGLONG>(ffd.nFileSizeHigh) << 32) | ffd.nFileSizeLow; // эта строка
+                    // вычисляет полный размер файла в байтах, используя два поля из структуры WIN32_FIND_DATA.
+                    // В WinApi размер файла хранится в двух 32-битных частях nFileSizeHigh и nFileSizeLow. С помощью
+                    // static_cast приводим nFileSizeHigh к 64-битному виду, чтобы при сдвиге не потерять данные, и сдвигаем ее на 32 бита влево.
+                    // Далее с помощью "|" объединяем старшую и младшую части. Таким образом, получаем размер.
                     size_t pos = file.name.find_last_of('.'); // ищем индекс точки
                     if (pos != string::npos) // проверям, найдена ли точка. Если точка найдена, то делается срез символов после точки - расширение
                         // Если не найдена, то инструкция npos запишет в pos максимальный размер числа, которй может принять size_t и запишет в file.extension None
@@ -188,7 +202,7 @@ int main() {
     // Настройка консоли для вывода Unicode
     setlocale(LC_ALL, "RUSSIAN");
 
-    Directory_It<file_info> it(L"D:\\");
+    Directory_It<file_info> it(L"C:\\");
 
     HWND consoleWindow = GetConsoleWindow();
     ShowWindow(consoleWindow, SW_MAXIMIZE);
