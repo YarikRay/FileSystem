@@ -142,20 +142,20 @@ public:
 
              if (hFind == INVALID_HANDLE_VALUE) {
                  DWORD err = GetLastError();
-                 if (err != ERROR_FILE_NOT_FOUND && err != ERROR_NO_MORE_FILES) {
+                 if (err != ERROR_FILE_NOT_FOUND && err != ERROR_NO_MORE_FILES) { // если возникают ошибки доступа к файлу, вызывается ошибка
                      wcerr << L"Ошибка доступа: " << search_path << endl;
                  }
                  continue;
              }
             do {
-                if (wcscmp(ffd.cFileName, L".") == 0 || wcscmp(ffd.cFileName, L"..") == 0) {
+                if (wcscmp(ffd.cFileName, L".") == 0 || wcscmp(ffd.cFileName, L"..") == 0) { // пропускаем текущую и родительскую директории
                     continue;
                 }
 
                 wstring full_path = current_path + L"\\" + ffd.cFileName;
                 file_info file;
 
-                if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) { // если фиксируется директория
                     file.full_path = full_path;
                     file.name = ffd.cFileName;
                     file.directory = true;
@@ -164,7 +164,7 @@ public:
                     info.push_back(file);
                     dirs_to_process.push_back(full_path);
                 }
-                else {
+                else { // действия для обычного файла
                     file.name = ffd.cFileName;
                     file.full_path = full_path;
                     file.directory = false;
@@ -177,7 +177,7 @@ public:
                     if (pos != string::npos) // проверям, найдена ли точка. Если точка найдена, то делается срез символов после точки - расширение
                         // Если не найдена, то инструкция npos запишет в pos максимальный размер числа, которй может принять size_t и запишет в file.extension None
                     {
-                        file.extension = file.name.substr(pos);
+                        file.extension = file.name.substr(pos); // добавляем в переменную extension расширение
                     }
                     else
                     {
