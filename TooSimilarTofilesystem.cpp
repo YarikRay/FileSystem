@@ -80,8 +80,7 @@ public:
             //         continue;
             //     }
             // }
-            if (ffd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT){ // флаг IO_REPARSE_TAG_SYMLINK позволяет отлавливать
-                // символьные ссылки. Если символьная ссылка найдена, просто продолжаем поиск
+            if (ffd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT){ 
                 wcout << L"Symlink was founded. Skip it!" << ffd.cFileName << endl;
                 continue;
             }
@@ -134,8 +133,7 @@ public:
             //         continue;
             //     }
             // }
-            if (ffd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT){ // флаг IO_REPARSE_TAG_SYMLINK позволяет отлавливать
-                // символьные ссылки. Если символьная ссылка найдена, просто продолжаем поиск
+            if (ffd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT){
                 wcout << L"Symlink was founded. Skip it!" << ffd.cFileName << endl;
                 continue;
             }
